@@ -15,8 +15,13 @@ const AMIL_PAGES = [
 
 const MUZAKKI_PAGES = ["/muzakki-dashboard"];
 
-// Mengubah nama fungsi dari 'proxy' menjadi 'middleware' agar dikenali Next.js
-export async function middleware(request: NextRequest) {
+// Menggunakan nama fungsi 'proxy' untuk Next.js 16 Proxy
+export async function proxy(request: NextRequest) {
+  // Bypass Server Actions to avoid proxy interference (e.g. redirecting POST requests)
+  if (request.headers.has("next-action")) {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
   // 1. Get session token from cookie

@@ -55,6 +55,8 @@ function DistributionsContent() {
     proofImage: ""
   });
 
+  const [categoryMode, setCategoryMode] = useState<"asnaf" | "lainnya">("asnaf");
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -135,6 +137,7 @@ function DistributionsContent() {
   const resetForm = () => {
     setFormData({ mustahikId: "", mustahikName: "", amount: 0, category: "Fakir", description: "", proofImage: "" });
     setPreviewImage(null);
+    setCategoryMode("asnaf");
   };
 
   const filteredDistributions = distributionList.filter(d => 
@@ -296,18 +299,62 @@ function DistributionsContent() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider pl-1">Asnaf</label>
-                  <select 
-                    disabled={!!formData.mustahikId}
-                    className={cn(
-                      "w-full px-4 py-2.5 rounded-xl border outline-none text-sm font-medium",
-                      formData.mustahikId ? "bg-emerald-100/50 border-emerald-200 text-emerald-600 cursor-not-allowed" : "bg-emerald-50 border-emerald-100"
-                    )}
-                    value={formData.category} 
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    {asnafCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                  <label className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider pl-1">Kategori Penyaluran</label>
+                  {/* Toggle: Asnaf / Lainnya */}
+                  <div className="flex bg-emerald-50 p-1 rounded-xl border border-emerald-100 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryMode("asnaf");
+                        setFormData({ ...formData, category: "Fakir" });
+                      }}
+                      className={cn(
+                        "flex-1 py-2 rounded-lg text-xs font-bold transition-all",
+                        categoryMode === "asnaf"
+                          ? "bg-white text-emerald-800 shadow-sm"
+                          : "text-emerald-500 hover:text-emerald-700"
+                      )}
+                    >
+                      Asnaf
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryMode("lainnya");
+                        setFormData({ ...formData, category: "" });
+                      }}
+                      className={cn(
+                        "flex-1 py-2 rounded-lg text-xs font-bold transition-all",
+                        categoryMode === "lainnya"
+                          ? "bg-white text-emerald-800 shadow-sm"
+                          : "text-emerald-500 hover:text-emerald-700"
+                      )}
+                    >
+                      Lainnya
+                    </button>
+                  </div>
+                  {categoryMode === "asnaf" ? (
+                    <select 
+                      disabled={!!formData.mustahikId}
+                      className={cn(
+                        "w-full px-4 py-2.5 rounded-xl border outline-none text-sm font-medium",
+                        formData.mustahikId ? "bg-emerald-100/50 border-emerald-200 text-emerald-600 cursor-not-allowed" : "bg-emerald-50 border-emerald-100"
+                      )}
+                      value={formData.category} 
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    >
+                      {asnafCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ketik kategori penyaluran, misal: Pendidikan, Sosial, dll."
+                      className="w-full px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100 outline-none text-sm font-medium"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    />
+                  )}
                 </div>
               </div>
 

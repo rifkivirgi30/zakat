@@ -9,7 +9,8 @@ import {
   addTransaction,
   changeMuzakkiPassword,
   getPublicStats,
-  getSession
+  getSession,
+  getZakatTypes
 } from "@/lib/actions";
 import {
   AreaChart,
@@ -59,21 +60,32 @@ function MuzakkiDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
-  // Initialize state from cache if available (survives Suspense remounts)
-  const [loading, setLoading] = useState(!_muzakkiCache);
+
+  // Check if cache belongs to the currently logged in user (hydration-safe)
+  let useCache = false;
+  if (typeof window !== "undefined") {
+    const storedId = Number(sessionStorage.getItem("muzakkiId"));
+    useCache = !!_muzakkiCache && _muzakkiCache.muzakkiId === storedId;
+  }
+
+  // Initialize state from cache if available and belongs to current user
+  const [loading, setLoading] = useState(!useCache);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   
   // Muzakki Account State — pre-populated from cache on remount
-  const [muzakkiId, setMuzakkiId] = useState<number | null>(_muzakkiCache?.muzakkiId ?? null);
-  const [profileData, setProfileData] = useState<any>(_muzakkiCache?.profileData ?? null);
-  const [transactions, setTransactions] = useState<any[]>(_muzakkiCache?.transactions ?? []);
-  const [distributions, setDistributions] = useState<any[]>(_muzakkiCache?.distributions ?? []);
-  const [categoryAggregate, setCategoryAggregate] = useState<Record<string, number>>(_muzakkiCache?.categoryAggregate ?? {});
+  const [muzakkiId, setMuzakkiId] = useState<number | null>(useCache ? _muzakkiCache!.muzakkiId : null);
+  const [profileData, setProfileData] = useState<any>(useCache ? _muzakkiCache!.profileData : null);
+  const [transactions, setTransactions] = useState<any[]>(useCache ? _muzakkiCache!.transactions : []);
+  const [distributions, setDistributions] = useState<any[]>(useCache ? _muzakkiCache!.distributions : []);
+  const [categoryAggregate, setCategoryAggregate] = useState<Record<string, number>>(useCache ? _muzakkiCache!.categoryAggregate : {});
   
   // Public Organization stats (for mirroring AreaChart)
-  const [publicChartData, setPublicChartData] = useState<any[]>(_muzakkiCache?.publicChartData ?? []);
+  const [publicChartData, setPublicChartData] = useState<any[]>(useCache ? _muzakkiCache!.publicChartData : []);
+
+  // Dynamic Program Lembaga types
+  const [zakatTypesList, setZakatTypesList] = useState<any[]>([]);
 
   // Receipt Modal (BSZ) State
   const [selectedTx, setSelectedTx] = useState<any>(null);
@@ -102,9 +114,10 @@ function MuzakkiDashboardContent() {
   const fetchDashboard = async (id: number) => {
     // Only show loading spinner on first fetch (no cache yet)
     if (!_muzakkiCache) setLoading(true);
-    const [res, stats] = await Promise.all([
+    const [res, stats, zTypes] = await Promise.all([
       getMuzakkiDashboardData(id),
-      getPublicStats()
+      getPublicStats(),
+      getZakatTypes()
     ]);
     if (res.success && res.muzakki) {
       setProfileData(res.muzakki);
@@ -115,6 +128,7 @@ function MuzakkiDashboardContent() {
     if (stats && stats.chartData) {
       setPublicChartData(stats.chartData);
     }
+    setZakatTypesList(zTypes.filter((t: any) => t.status === "Active"));
     // Update module-level cache
     _muzakkiCache = {
       muzakkiId: id,
@@ -136,13 +150,6 @@ function MuzakkiDashboardContent() {
 
   useEffect(() => {
     const verifyAuth = async () => {
-      // If cache exists, data is already loaded — skip network calls entirely
-      // (this handles Suspense remounts from tab switching)
-      if (_muzakkiCache) {
-        setLoading(false);
-        return;
-      }
-
       const session = await getSession();
       if (!session || session.role !== "muzakki" || !session.userId) {
         _muzakkiCache = null; // Clear cache on auth failure
@@ -151,6 +158,14 @@ function MuzakkiDashboardContent() {
         return;
       }
 
+      // If cache exists and belongs to the currently logged in user, use it
+      if (_muzakkiCache && _muzakkiCache.muzakkiId === session.userId) {
+        setLoading(false);
+        return;
+      }
+
+      // Clear cache and fetch fresh data if it belongs to another user
+      _muzakkiCache = null;
       setMuzakkiId(session.userId);
       fetchDashboard(session.userId);
     };
@@ -335,7 +350,7 @@ function MuzakkiDashboardContent() {
   // Calculate distributions stats for transparency
   const totalDistribution = Object.values(categoryAggregate).reduce((a, b) => a + b, 0);
 
-  if (loading && !profileData) {
+  if (!profileData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
@@ -825,7 +840,13 @@ function MuzakkiDashboardContent() {
                             <option>Zakat Profesi</option>
                             <option>Zakat Maal</option>
                             <option>Zakat Fitrah</option>
-                            <option>Sedekah / Infak</option>
+                            <option>Infaq &amp; Sedekah</option>
+                            <option>Fidyah</option>
+                            {zakatTypesList.map((type) => (
+                              <option key={type.id} value={type.name}>
+                                {type.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
@@ -855,7 +876,7 @@ function MuzakkiDashboardContent() {
                           value={payValues.method}
                           onChange={(e) => setPayValues({ ...payValues, method: e.target.value })}
                         >
-                          <option value="qris">QRIS Linsharein (Otomatis)</option>
+                          <option value="qris">QRIS Ma'had Fastabiqul Khoirot (Otomatis)</option>
                           <option value="transfer">Transfer Bank Syariah Indonesia (BSI)</option>
                         </select>
                       </div>
@@ -869,7 +890,7 @@ function MuzakkiDashboardContent() {
                         {payValues.method === "qris" ? (
                           <div className="flex flex-col items-center py-2 gap-3">
                             <div className="p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden">
-                              <div className="w-36 h-36 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=LinshareinZakatPortal')] bg-cover" />
+                              <div className="w-36 h-36 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MahadFastabiqulKhoirotZakatPortal')] bg-cover" />
                             </div>
                             <span className="text-[9px] text-emerald-500 font-bold">Terima semua m-banking & e-wallet (Gopay, OVO, Dana)</span>
                           </div>
@@ -878,7 +899,7 @@ function MuzakkiDashboardContent() {
                             <div>
                               <p className="text-[10px] font-bold text-emerald-400">BANK SYARIAH INDONESIA (BSI)</p>
                               <p className="text-lg font-black text-emerald-800 mt-0.5 tracking-wider">7123 4567 89</p>
-                              <p className="text-[10px] font-bold text-emerald-600">a.n YAYASAN LINSHAREIN AMAL</p>
+                              <p className="text-[10px] font-bold text-emerald-600">a.n MA'HAD FASTABIQUL KHOIROT</p>
                             </div>
                             <button
                               type="button"
@@ -1325,10 +1346,10 @@ function MuzakkiDashboardContent() {
                 <div className="flex justify-between items-start gap-4 border-b-2 border-double border-emerald-900/20 pb-6 relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-                      <span className="text-white font-black italic text-2xl">L</span>
+                      <span className="text-white font-black italic text-2xl">M</span>
                     </div>
                     <div>
-                      <h4 className="text-md font-black text-emerald-950 tracking-tighter uppercase leading-none">LAZ LINSHAREIN AMAL</h4>
+                      <h4 className="text-md font-black text-emerald-950 tracking-tighter uppercase leading-none">MA'HAD FASTABIQUL KHOIROT</h4>
                       <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mt-1">Lembaga Amil Zakat Nasional</p>
                       <p className="text-[8px] text-emerald-500 mt-0.5">Izin Kemenag RI No. 123 Tahun 2026</p>
                     </div>
@@ -1381,7 +1402,7 @@ function MuzakkiDashboardContent() {
                   <div className="space-y-1">
                     {/* Secure validation QR Code Simulation */}
                     <div className="w-16 h-16 bg-gray-50 border border-emerald-100 p-1.5 rounded-lg flex items-center justify-center relative">
-                      <div className="w-full h-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=LinshareinSecureBSZVerificationToken')] bg-cover opacity-80" />
+                      <div className="w-full h-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=MahadFastabiqulKhoirotSecureBSZVerificationToken')] bg-cover opacity-80" />
                     </div>
                     <p className="text-[8px] text-emerald-500 font-semibold italic">Scan untuk verifikasi keaslian</p>
                   </div>
@@ -1395,7 +1416,7 @@ function MuzakkiDashboardContent() {
                     <div className="relative">
                       {/* Amil Stamp mockup in background of signature */}
                       <div className="absolute right-4 -top-8 w-16 h-16 border-2 border-dashed border-emerald-600/30 rounded-full flex items-center justify-center opacity-30 select-none pointer-events-none rotate-12">
-                        <span className="text-[8px] font-black text-emerald-600 text-center leading-none">LAZ LINSHAREIN<br/>AMAL</span>
+                        <span className="text-[8px] font-black text-emerald-600 text-center leading-none">MA'HAD FASTABIQUL<br/>KHOIROT</span>
                       </div>
                       <p className="text-xs font-black text-emerald-900 underline">Drs. H. Amil Utama, M.A.</p>
                       <p className="text-[9px] text-emerald-500 font-bold uppercase mt-0.5">Kepala Bidang Penyaluran</p>

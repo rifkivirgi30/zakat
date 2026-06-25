@@ -27,7 +27,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { initialMuzakki } from "@/lib/data";
 
-import { getTransactions, addTransaction, getMuzakki, updateTransaction, deleteTransaction, verifyTransaction, getTransactionProof } from "@/lib/actions";
+import { getTransactions, addTransaction, getMuzakki, updateTransaction, deleteTransaction, verifyTransaction, getTransactionProof, getZakatTypes } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import Toast from "@/components/ui/Toast";
 
@@ -39,6 +39,7 @@ function TransactionsContent() {
   const [lastMuzakki, setLastMuzakki] = useState("");
   const [transactionList, setTransactionList] = useState<any[]>([]);
   const [muzakkiList, setMuzakkiList] = useState<any[]>([]);
+  const [zakatTypesList, setZakatTypesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isEdit, setIsEdit] = useState(false);
@@ -75,9 +76,10 @@ function TransactionsContent() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [txs, mzk] = await Promise.all([getTransactions(), getMuzakki()]);
+    const [txs, mzk, zTypes] = await Promise.all([getTransactions(), getMuzakki(), getZakatTypes()]);
     setTransactionList(txs);
     setMuzakkiList(mzk);
+    setZakatTypesList(zTypes.filter((t: any) => t.status === "Active"));
     setLoading(false);
   };
 
@@ -204,7 +206,7 @@ function TransactionsContent() {
       setFormData(prev => ({
         ...prev,
         amount: parseInt(amount),
-        type: type === "profesi" ? "Zakat Profesi" : type === "maal" ? "Zakat Maal" : "Zakat Fitrah"
+        type: type === "profesi" ? "Zakat Profesi" : type === "maal" ? "Zakat Maal" : type === "infaq" ? "Infaq & Sedekah" : type === "fidyah" ? "Fidyah" : type === "fasangat" ? "Fasangat" : "Zakat Fitrah"
       }));
       setShowAddModal(true);
     }
@@ -248,7 +250,7 @@ function TransactionsContent() {
       {/* Print Header (Only visible on PDF) */}
       <div className="print-header">
         <h1 className="text-2xl font-bold text-emerald-900">LAPORAN TRANSAKSI ZAKAT</h1>
-        <p className="text-sm text-emerald-600">Linsharein Amal Digital • Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
+        <p className="text-sm text-emerald-600">Ma'had Fastabiqul Khoirot • Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
         <hr className="my-4 border-emerald-100" />
       </div>
 
@@ -433,9 +435,9 @@ function TransactionsContent() {
                             const amountStr = tx.amount.toLocaleString("id-ID");
                             let message = "";
                             if (tx.status === "Pending") {
-                              message = `Assalamualaikum Wr. Wb. *${name}*,\n\nTerima kasih telah mengajukan pembayaran *${tx.type}* sebesar *Rp ${amountStr}* melalui Linsharein Amal.\n\nMohon konfirmasi jika Anda sudah melakukan transfer agar Amil kami dapat segera memverifikasi transaksi Anda. Terima kasih. Wassalamualaikum Wr. Wb.`;
+                              message = `Assalamualaikum Wr. Wb. *${name}*,\n\nTerima kasih telah mengajukan pembayaran *${tx.type}* sebesar *Rp ${amountStr}* melalui Ma'had Fastabiqul Khoirot.\n\nMohon konfirmasi jika Anda sudah melakukan transfer agar Amil kami dapat segera memverifikasi transaksi Anda. Terima kasih. Wassalamualaikum Wr. Wb.`;
                             } else if (tx.status === "Success") {
-                              message = `Assalamualaikum Wr. Wb. *${name}*,\n\nAlhamdulillah, pembayaran *${tx.type}* Anda sebesar *Rp ${amountStr}* telah terverifikasi dan diterima secara resmi oleh Linsharein Amal.\n\n*Doa Amil untuk Anda:*\n_"Ajarakallahu fiimaa a'thaita, wa baaraka fiimaa abqaita, wa ja'alahu laka thahuuraa."_\n(Semoga Allah memberikan pahala atas apa yang engkau berikan, memberikan berkah atas apa yang engkau sisakan, dan menjadikannya pembersih bagimu.)\n\nTerima kasih atas kepercayaan Anda. Wassalamualaikum Wr. Wb.`;
+                              message = `Assalamualaikum Wr. Wb. *${name}*,\n\nAlhamdulillah, pembayaran *${tx.type}* Anda sebesar *Rp ${amountStr}* telah terverifikasi dan diterima secara resmi oleh Ma'had Fastabiqul Khoirot.\n\n*Doa Amil untuk Anda:*\n_"Ajarakallahu fiimaa a'thaita, wa baaraka fiimaa abqaita, wa ja'alahu laka thahuuraa."_\n(Semoga Allah memberikan pahala atas apa yang engkau berikan, memberikan berkah atas apa yang engkau sisakan, dan menjadikannya pembersih bagimu.)\n\nTerima kasih atas kepercayaan Anda. Wassalamualaikum Wr. Wb.`;
                             } else {
                               message = `Assalamualaikum Wr. Wb. *${name}*,\n\nMohon maaf, transaksi pembayaran *${tx.type}* Anda sebesar *Rp ${amountStr}* dinyatakan tidak berhasil/gagal.\n\nSilakan hubungi kami kembali untuk bantuan lebih lanjut. Terima kasih. Wassalamualaikum Wr. Wb.`;
                             }
@@ -577,8 +579,9 @@ function TransactionsContent() {
                       <option>Zakat Fitrah</option>
                       <option>Zakat Profesi</option>
                       <option>Zakat Maal</option>
-                      <option>Infak</option>
-                      <option>Sedekah</option>
+                      <option>Infaq &amp; Sedekah</option>
+                      <option>Fidyah</option>
+                      <option>Fasangat</option>
                     </select>
                   </div>
                 </div>
@@ -748,9 +751,9 @@ function TransactionsContent() {
               <div className="p-8 space-y-8 bg-white text-emerald-900 overflow-y-auto flex-1 custom-scrollbar" id="receipt-content">
                 <div className="text-center space-y-2 border-b border-emerald-100 pb-8">
                   <div className="w-16 h-16 bg-emerald-600 rounded-2xl mx-auto flex items-center justify-center mb-4">
-                    <span className="text-3xl font-black text-white italic">L</span>
+                    <span className="text-3xl font-black text-white italic">M</span>
                   </div>
-                  <h2 className="text-2xl font-black tracking-tight text-emerald-900">Linsharein Amal</h2>
+                  <h2 className="text-2xl font-black tracking-tight text-emerald-900">Ma'had Fastabiqul Khoirot</h2>
                   <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em]">Kuitansi Zakat Digital</p>
                 </div>
 
@@ -803,7 +806,7 @@ function TransactionsContent() {
                 <div className="pt-8 border-t border-emerald-50 flex justify-between items-center">
                   <div className="text-left">
                     <p className="text-[8px] font-bold text-emerald-300">Dikeluarkan Oleh</p>
-                    <p className="text-[10px] font-black text-emerald-900">Petugas Amil Linsharein</p>
+                    <p className="text-[10px] font-black text-emerald-900">Petugas Amil Ma'had Fastabiqul Khoirot</p>
                   </div>
                   <div className="w-12 h-12 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center">
                     <QrCode className="w-8 h-8 text-emerald-200" />

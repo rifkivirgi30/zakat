@@ -29,7 +29,13 @@ export default function DashboardPage() {
     uniqueMuzakki: 0,
     totalDistribution: 0,
     chartData: [],
-    zakatTypes: []
+    zakatTypes: [],
+    growth: {
+      zakat: { change: "0%", trend: "up" },
+      muzakki: { change: "0%", trend: "up" },
+      distribution: { change: "0%", trend: "up" },
+      transactions: { change: "0%", trend: "up" }
+    }
   });
   const [chartPeriod, setChartPeriod] = useState("6m");
   const [chartLoading, setChartLoading] = useState(false);
@@ -72,32 +78,32 @@ export default function DashboardPage() {
     {
       label: "Total Zakat Terkumpul",
       value: statsData.totalZakat,
-      change: "+12.5%",
-      trend: "up",
+      change: statsData.growth?.zakat?.change || "0%",
+      trend: statsData.growth?.zakat?.trend || "up",
       icon: Wallet,
       color: "emerald"
     },
     {
       label: "Total Muzakki",
       value: statsData.uniqueMuzakki,
-      change: "+8.2%",
-      trend: "up",
+      change: statsData.growth?.muzakki?.change || "0%",
+      trend: statsData.growth?.muzakki?.trend || "up",
       icon: Users,
       color: "blue"
     },
     {
       label: "Total Penyaluran",
       value: statsData.totalDistribution,
-      change: "+5.4%",
-      trend: "up",
+      change: statsData.growth?.distribution?.change || "0%",
+      trend: statsData.growth?.distribution?.trend || "up",
       icon: ArrowUpRight,
       color: "amber"
     },
     {
       label: "Total Transaksi",
       value: statsData.totalTransactions,
-      change: "-2.1%",
-      trend: "down",
+      change: statsData.growth?.transactions?.change || "0%",
+      trend: statsData.growth?.transactions?.trend || "up",
       icon: History,
       color: "purple"
     },
@@ -298,9 +304,65 @@ export default function DashboardPage() {
                   <th className="px-6 py-4 font-bold text-center">Status</th>
                 </tr>
               </thead>
-
-          </table>
-        </div>
+              <tbody className="divide-y divide-emerald-50">
+                {pageLoading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-emerald-400">
+                      Memuat data transaksi...
+                    </td>
+                  </tr>
+                ) : recentTx.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-emerald-500 italic">
+                      Belum ada transaksi
+                    </td>
+                  </tr>
+                ) : (
+                  recentTx.map((tx: any) => (
+                    <tr key={tx.id} className="hover:bg-emerald-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className={cn("text-sm font-bold", tx.anonymous ? "text-emerald-600 italic" : "text-emerald-900")}>
+                            {tx.anonymous ? "Hamba Allah" : (tx.muzakkiName || tx.muzakki?.name)}
+                          </span>
+                          <span className="text-[10px] text-emerald-500">
+                            {new Date(tx.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-black text-emerald-900">
+                          {formatCurrency(tx.amount)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          {tx.status === "Success" ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                              Berhasil
+                            </span>
+                          ) : tx.status === "Pending" ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">
+                              Gagal
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
       </div>
     </div>
     </DashboardLayout>

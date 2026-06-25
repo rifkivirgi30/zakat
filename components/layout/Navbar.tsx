@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Menu, User, X, LucideIcon } from "lucide-react";
+import { Bell, Menu, User, X, LucideIcon, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn, formatCurrency } from "@/lib/utils";
-import { getMyTransactions } from "@/lib/actions";
+import { getMyTransactions, logoutUser } from "@/lib/actions";
 
 interface MenuItem {
   label: string;
@@ -34,6 +34,7 @@ const muzakkiMobileMenuItems: MenuItem[] = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -174,10 +175,17 @@ export default function Navbar() {
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center text-xs text-emerald-400 italic">Belum ada notifikasi</div>
                       ) : notifications.map((n) => (
-                        <div key={n.id} className={cn(
-                          "p-4 border-b border-emerald-50 hover:bg-emerald-50/50 transition-colors cursor-pointer relative",
-                          n.unread && "bg-emerald-50/20"
-                        )}>
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            setShowNotifications(false);
+                            router.push(userRole === "muzakki" ? "/muzakki-dashboard?tab=history" : "/transactions");
+                          }}
+                          className={cn(
+                            "p-4 border-b border-emerald-50 hover:bg-emerald-50/50 transition-colors cursor-pointer relative",
+                            n.unread && "bg-emerald-50/20"
+                          )}
+                        >
                           {n.unread && <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />}
                           <p className="text-xs font-bold text-emerald-900">{n.title}</p>
                           <p className="text-[10px] text-emerald-600 mt-0.5 line-clamp-2">{n.message}</p>
@@ -223,17 +231,26 @@ export default function Navbar() {
       )} onClick={() => setIsMobileMenuOpen(false)}>
         <div 
           className={cn(
-            "w-72 h-full sidebar-gradient transition-transform duration-300 ease-out p-6",
+            "w-72 h-full sidebar-gradient transition-transform duration-300 ease-out p-6 flex flex-col overflow-hidden",
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           )}
           onClick={(e) => e.stopPropagation()}
         >
+          <style dangerouslySetInnerHTML={{ __html: `
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none !important;
+            }
+            .scrollbar-hide {
+              -ms-overflow-style: none !important;
+              scrollbar-width: none !important;
+            }
+          `}} />
           <div className="flex justify-between items-center mb-8">
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold italic text-sm">L</span>
+                <span className="text-white font-bold italic text-sm">M</span>
               </div>
-              <span className="text-white font-bold">Linsharein</span>
+              <span className="text-white font-bold">Ma'had Fastabiqul Khoirot</span>
             </Link>
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -243,7 +260,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-1 flex-1 overflow-y-auto scrollbar-hide">
             {(userRole === "muzakki" ? muzakkiMobileMenuItems : amilMenuItems).map((item) => {
               const isActive = item.href.includes("?")
                 ? pathname + (typeof window !== "undefined" ? window.location.search : "") === item.href.replace(/\?/, "?" )
@@ -265,6 +282,24 @@ export default function Navbar() {
               );
             })}
           </nav>
+
+          {userRole && (
+            <div className="mt-8 pt-4 border-t border-white/10">
+              <button 
+                onClick={async () => {
+                  await logoutUser();
+                  sessionStorage.clear();
+                  localStorage.removeItem("sessionLastActive");
+                  setIsMobileMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-emerald-100/70 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all group"
+              >
+                <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

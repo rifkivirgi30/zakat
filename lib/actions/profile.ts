@@ -8,12 +8,12 @@ export async function getOrganizationProfile() {
   if (!profile) {
     profile = await prisma.organizationProfile.create({
       data: {
-        name: "LAZ Linsharein Amal",
+        name: "Ma'had Fastabiqul Khoirot",
         subtitle: "Lembaga Amil Zakat Nasional",
         address: "Jl. Raya Zakat No. 123, Jakarta",
         phone: "+62 812-3456-7890",
-        email: "info@linsharein.com",
-        website: "www.linsharein.com",
+        email: "info@fastabiqulkhoirot.or.id",
+        website: "www.fastabiqulkhoirot.or.id",
         verification: "Terverifikasi 2026",
         vision: "Menjadi lembaga amil zakat terdepan dalam pengelolaan dana umat yang profesional, transparan, dan berbasis teknologi untuk mewujudkan kesejahteraan umat yang berkelanjutan.",
         mission: JSON.stringify([

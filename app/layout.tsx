@@ -28,38 +28,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            const log = (msg) => {
-              const logs = JSON.parse(localStorage.getItem('nav_logs') || '[]');
-              logs.push({ time: new Date().toISOString(), url: window.location.href, msg });
-              localStorage.setItem('nav_logs', JSON.stringify(logs));
-              console.log('NAV_LOG:', msg);
-            };
-
-            const originalPushState = history.pushState;
-            history.pushState = function(...args) {
-              log('pushState: ' + args[2]);
-              return originalPushState.apply(this, args);
-            };
-
-            const originalReplaceState = history.replaceState;
-            history.replaceState = function(...args) {
-              log('replaceState: ' + args[2]);
-              return originalReplaceState.apply(this, args);
-            };
-
-            window.addEventListener('popstate', () => {
-              log('popstate');
-            });
-
-            window.addEventListener('beforeunload', () => {
-              log('beforeunload');
-            });
-
-            log('Page loaded / script initialized');
-          })();
-        ` }} />
         {children}
       </body>
     </html>

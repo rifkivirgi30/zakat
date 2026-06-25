@@ -41,29 +41,43 @@ export default async function Home() {
               <span className="text-xl font-bold text-white italic">L</span>
             </div>
 
-            <span className="text-xl font-black tracking-tight text-emerald-900">
+            <span className="text-base sm:text-lg md:text-xl font-black tracking-tight text-emerald-900 truncate max-w-[150px] sm:max-w-[250px] md:max-w-[300px] lg:max-w-none">
               {profile.name}
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-8">
+            <a
+              href="#transparency"
+              className="text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap"
+            >
+              Transparansi
+            </a>
+
+            <a
+              href="#how-to"
+              className="text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap"
+            >
+              Cara Bayar
+            </a>
+
             <a
               href="#features"
-              className="text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors"
+              className="text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap"
             >
               Fitur
             </a>
 
             <a
               href="#about"
-              className="text-sm font-bold text-emerald-900 transition-colors"
+              className="text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap"
             >
               Tentang Kami
             </a>
 
             <Link
               href="/login"
-              className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-sm shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all hover:scale-105"
+              className="px-4 py-2 lg:px-6 lg:py-2.5 bg-emerald-600 text-white rounded-xl font-black text-sm shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all hover:scale-105 whitespace-nowrap"
             >
               Masuk Dashboard
             </Link>
@@ -110,7 +124,7 @@ export default async function Home() {
         </section>
 
         {/* Transparency Stats Section */}
-        <section className="w-full py-20 border-t border-emerald-100 bg-gradient-to-b from-white to-emerald-50/20 scroll-mt-28">
+        <section id="transparency" className="w-full py-20 border-t border-emerald-100 bg-gradient-to-b from-white to-emerald-50/20 scroll-mt-28">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <span className="text-xs font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full">
@@ -200,7 +214,7 @@ export default async function Home() {
         </section>
 
         {/* How to Donate Section */}
-        <section className="w-full py-20 bg-white border-t border-emerald-100 scroll-mt-28">
+        <section id="how-to" className="w-full py-20 bg-white border-t border-emerald-100 scroll-mt-28">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <span className="text-xs font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full">

@@ -3,26 +3,27 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Muzakki {
-  id            Int           @id @default(autoincrement())
-  name          String
-  gender        String?
-  address       String?       @db.Text
-  phone         String?
-  job           String?
-  password      String?
-  createdAt     DateTime      @default(now())
-  transactions  Transaction[]
-  loginAttempts  Int           @default(0)
-  lockUntil     DateTime?
-  resetAttempts  Int           @default(0)
-  resetLockUntil DateTime?
-  resetToken     String?
-  resetExpiredAt DateTime?
+  id              Int           @id @default(autoincrement())
+  name            String
+  gender          String?
+  address         String?
+  phone           String?
+  job             String?
+  password        String?
+  createdAt       DateTime      @default(now())
+  transactions    Transaction[]
+  loginAttempts   Int           @default(0)
+  lockUntil       DateTime?
+  resetAttempts   Int           @default(0)
+  resetLockUntil  DateTime?
+  resetToken      String?
+  resetExpiredAt  DateTime?
 }
 
 model Transaction {
@@ -34,65 +35,65 @@ model Transaction {
   type        String
   amount      Float
   method      String
-  status      String   // Pending, Success, Failed
-  proofImage  String?  @db.LongText // For manual transfer verification
+  status      String
+  proofImage  String?
   anonymous   Boolean  @default(false)
   date        DateTime @default(now())
 }
 
 model Admin {
-  id            Int       @id @default(autoincrement())
-  username      String    @unique
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
   password      String
   name          String?
-  loginAttempts Int       @default(0)
+  loginAttempts Int      @default(0)
   lockUntil     DateTime?
 }
 
 model Mustahik {
   id            Int            @id @default(autoincrement())
   name          String
-  category      String         // Fakir, Miskin, Amil, Muallaf, Riqab, Gharim, Fisabilillah, Ibnu Sabil
+  category      String
   phone         String?
-  address       String?        @db.Text
+  address       String?
   distributions Distribution[]
   createdAt     DateTime       @default(now())
 }
 
 model Distribution {
-  id          Int       @id @default(autoincrement())
-  mustahikId  Int?
-  mustahik    Mustahik? @relation(fields: [mustahikId], references: [id])
-  mustahikName String
-  amount      Float
-  category    String
-  description String?   @db.Text
-  proofImage  String?   @db.LongText // For storing base64 or path
-  date        DateTime  @default(now())
+  id            Int       @id @default(autoincrement())
+  mustahikId    Int?
+  mustahik      Mustahik? @relation(fields: [mustahikId], references: [id])
+  mustahikName  String
+  amount        Float
+  category      String
+  description   String?
+  proofImage    String?
+  date          DateTime  @default(now())
 }
 
 model ZakatType {
   id          Int      @id @default(autoincrement())
   name        String
-  description String?  @db.Text
+  description String?
   percentage  String?
-  status      String   @default("Active") // Active, Inactive
+  status      String   @default("Active")
   icon        String?  @default("HeartHandshake")
   color       String?  @default("emerald")
   createdAt   DateTime @default(now())
 }
 
 model OrganizationProfile {
-  id            Int      @id @default(autoincrement())
-  name          String   @default("LAZ Linsharein Amal")
-  subtitle      String   @default("Lembaga Amil Zakat Nasional")
-  address       String?  @db.Text
-  phone         String?
-  email         String?
-  website       String?
-  verification  String?
-  vision        String?  @db.Text
-  mission       String?  @db.Text // JSON string array
-  logoBase64    String?  @db.LongText
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String   @default("Ma'had Fastabiqul Khoirot")
+  subtitle     String   @default("Lembaga Amil Zakat Nasional")
+  address      String?
+  phone        String?
+  email        String?
+  website      String?
+  verification String?
+  vision       String?
+  mission      String?
+  logoBase64   String?
+  updatedAt    DateTime @updatedAt
 }

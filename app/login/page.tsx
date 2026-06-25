@@ -238,7 +238,7 @@ export default function LoginPage() {
             <ShieldCheck className="w-9 h-9 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-emerald-900 tracking-tight">Linsharein Amal</h1>
+            <h1 className="text-2xl font-black text-emerald-900 tracking-tight">Ma'had Fastabiqul Khoirot</h1>
             <p className="text-sm text-emerald-600/70 font-medium">Sistem Informasi Pengelolaan Zakat Digital</p>
           </div>
         </div>
@@ -394,7 +394,7 @@ export default function LoginPage() {
                   <div className="pt-2 border-t border-emerald-50 text-center">
                     <p className="text-[10px] font-semibold text-emerald-600/70">Lupa nama lengkap terdaftar?</p>
                     <a
-                      href="https://wa.me/6281234567890?text=Halo%20Admin%20Linsharein%20Amal%2C%20saya%20lupa%20nama%20lengkap%20terdaftar%20dan%20kata%20sandi%20untuk%20akun%20WhatsApp%20saya.%20Mohon%20bantuannya%20untuk%20reset%20kata%20sandi."
+                      href="https://wa.me/6281234567890?text=Halo%20Admin%20Ma'had%20Fastabiqul%20Khoirot%2C%20saya%20lupa%20nama%20lengkap%20terdaftar%20dan%20kata%20sandi%20untuk%20akun%20WhatsApp%20saya.%20Mohon%20bantuannya%20untuk%20reset%20kata%20sandi."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-1.5 inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] rounded-xl transition-all border border-emerald-100"
@@ -619,7 +619,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-emerald-600/50 text-xs font-medium">
-          © 2026 Linsharein Amal. Purifying Wealth, Empowering Ummah.
+          © 2026 Ma'had Fastabiqul Khoirot. Purifying Wealth, Empowering Ummah.
         </p>
       </div>
     </div>

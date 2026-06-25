@@ -23,6 +23,7 @@ export async function addZakatType(data: { name: string; description?: string; p
       },
     });
     revalidatePath("/zakat-types");
+    revalidatePath("/program-lembaga");
     return safeSerialize({ success: true, data: res });
   } catch (error: any) {
     if (error?.message === "FORBIDDEN") return { success: false, error: "Akses ditolak. Hanya Amil yang berwenang." };
@@ -46,6 +47,7 @@ export async function updateZakatType(id: number, data: { name: string; descript
       },
     });
     revalidatePath("/zakat-types");
+    revalidatePath("/program-lembaga");
     return safeSerialize({ success: true, data: res });
   } catch (error: any) {
     if (error?.message === "FORBIDDEN") return { success: false, error: "Akses ditolak. Hanya Amil yang berwenang." };
@@ -59,6 +61,7 @@ export async function deleteZakatType(id: number) {
     await requireAmil();
     await prisma.zakatType.delete({ where: { id } });
     revalidatePath("/zakat-types");
+    revalidatePath("/program-lembaga");
     return { success: true };
   } catch (error: any) {
     if (error?.message === "FORBIDDEN") return { success: false, error: "Akses ditolak. Hanya Amil yang berwenang." };

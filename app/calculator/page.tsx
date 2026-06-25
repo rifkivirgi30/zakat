@@ -18,6 +18,8 @@ import {
   Users,
   UserCircle,
   HandCoins,
+  HandHeart,
+  Wheat,
   Smartphone,
   Bell
 } from "lucide-react";
@@ -92,6 +94,15 @@ function CalculatorContent() {
     members: 1, price: 36250
   });
 
+  // Infaq & Sedekah State
+  const [infaqAmount, setInfaqAmount] = useState(0);
+
+  // Fidyah State
+  const [fidyahAmount, setFidyahAmount] = useState(0);
+
+  // Fasangat State
+  const [fasangatAmount, setFasangatAmount] = useState(0);
+
   const [zakatDue, setZakatDue] = useState(0);
   const [isEligible, setIsEligible] = useState(false);
   const [nisab, setNisab] = useState(0);
@@ -143,6 +154,18 @@ function CalculatorContent() {
         setZakatDue(0);
         setIsEligible(false);
       }
+    } else if (activeTab === "infaq") {
+      setZakatDue(infaqAmount);
+      setIsEligible(infaqAmount > 0);
+      setNisab(0);
+    } else if (activeTab === "fidyah") {
+      setZakatDue(fidyahAmount);
+      setIsEligible(fidyahAmount > 0);
+      setNisab(0);
+    } else if (activeTab === "fasangat") {
+      setZakatDue(fasangatAmount);
+      setIsEligible(fasangatAmount > 0);
+      setNisab(0);
     } else {
       // Fitrah
       const total = fitrahValues.members * fitrahValues.price;
@@ -150,7 +173,7 @@ function CalculatorContent() {
       setIsEligible(true);
       setNisab(0);
     }
-  }, [activeTab, maalValues, profesiValues, fitrahValues]);
+  }, [activeTab, maalValues, profesiValues, fitrahValues, infaqAmount, fidyahAmount, fasangatAmount]);
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +196,7 @@ function CalculatorContent() {
     const result = await addTransaction({
       muzakkiName: muzakkiData.name || "Hamba Allah",
       phone: muzakkiData.phone,
-      type: activeTab === 'maal' ? 'Zakat Maal' : activeTab === 'profesi' ? 'Zakat Profesi' : 'Zakat Fitrah',
+      type: activeTab === 'maal' ? 'Zakat Maal' : activeTab === 'profesi' ? 'Zakat Profesi' : activeTab === 'infaq' ? 'Infaq & Sedekah' : activeTab === 'fidyah' ? 'Fidyah' : activeTab === 'fasangat' ? 'Fasangat' : 'Zakat Fitrah',
       amount: zakatDue,
       method: muzakkiData.method,
       status: "Pending",
@@ -236,7 +259,7 @@ function CalculatorContent() {
               <p className="text-xs font-black text-emerald-400 uppercase tracking-widest">Ringkasan Donasi</p>
               <div className="flex justify-between items-center border-b border-white/10 pb-3">
                 <span className="text-sm text-emerald-300 font-medium">Jenis Zakat</span>
-                <span className="text-sm font-black text-white">{activeTab === 'maal' ? 'Zakat Maal' : activeTab === 'profesi' ? 'Zakat Profesi' : 'Zakat Fitrah'}</span>
+                <span className="text-sm font-black text-white">{activeTab === 'maal' ? 'Zakat Maal' : activeTab === 'profesi' ? 'Zakat Profesi' : activeTab === 'infaq' ? 'Infaq & Sedekah' : activeTab === 'fidyah' ? 'Fidyah' : activeTab === 'fasangat' ? 'Fasangat' : 'Zakat Fitrah'}</span>
               </div>
               <div className="flex justify-between items-center border-b border-white/10 pb-3">
                 <span className="text-sm text-emerald-300 font-medium">Nominal</span>
@@ -266,6 +289,9 @@ function CalculatorContent() {
                   setMaalValues({ savings: 0, gold: 0, investments: 0, other: 0, debts: 0 });
                   setProfesiValues({ income: 0, bonus: 0, expenses: 0 });
                   setFitrahValues({ members: 1, price: 45000 });
+                  setInfaqAmount(0);
+                  setFidyahAmount(0);
+                  setFasangatAmount(0);
                 }}
                 className="flex-1 py-3.5 bg-white text-emerald-600 border border-emerald-100 rounded-2xl font-bold hover:bg-emerald-50 transition-all"
               >
@@ -296,6 +322,9 @@ function CalculatorContent() {
           <TabBtn active={activeTab === "maal"} onClick={() => setActiveTab("maal")} label="Zakat Maal" icon={Coins} />
           <TabBtn active={activeTab === "profesi"} onClick={() => setActiveTab("profesi")} label="Zakat Profesi" icon={Briefcase} />
           <TabBtn active={activeTab === "fitrah"} onClick={() => setActiveTab("fitrah")} label="Zakat Fitrah" icon={Users} />
+          <TabBtn active={activeTab === "infaq"} onClick={() => setActiveTab("infaq")} label="Infaq & Sedekah" icon={HandHeart} />
+          <TabBtn active={activeTab === "fidyah"} onClick={() => setActiveTab("fidyah")} label="Fidyah" icon={Wheat} />
+          <TabBtn active={activeTab === "fasangat"} onClick={() => setActiveTab("fasangat")} label="Fasangat" icon={HeartHandshake} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -303,12 +332,15 @@ function CalculatorContent() {
           <div className="bg-white p-8 rounded-[2.5rem] border border-emerald-100 shadow-xl space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-emerald-900">
-                {activeTab === "maal" ? "Rincian Kekayaan" : activeTab === "profesi" ? "Rincian Penghasilan" : "Data Keluarga"}
+                {activeTab === "maal" ? "Rincian Kekayaan" : activeTab === "profesi" ? "Rincian Penghasilan" : activeTab === "infaq" ? "Nominal Infaq & Sedekah" : activeTab === "fidyah" ? "Nominal Fidyah" : activeTab === "fasangat" ? "Nominal Iuran Fasangat" : "Data Keluarga"}
               </h3>
               <button
                 onClick={() => {
                   setMaalValues({ savings: 0, gold: 0, investments: 0, other: 0, debts: 0 });
                   setProfesiValues({ income: 0, bonus: 0, expenses: 0 });
+                  setInfaqAmount(0);
+                  setFidyahAmount(0);
+                  setFasangatAmount(0);
                 }}
                 className="text-xs font-bold text-emerald-500 flex items-center gap-1.5 hover:text-emerald-700"
               >
@@ -343,6 +375,40 @@ function CalculatorContent() {
                   <CalcInput icon={Coins} label="Harga Beras (Per Kg)" value={fitrahValues.price} onChange={(v: number) => setFitrahValues({ ...fitrahValues, price: v })} />
                 </div>
               )}
+
+              {activeTab === "infaq" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                    <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                      <span className="font-black">Infaq & Sedekah</span> adalah pemberian harta secara sukarela tanpa batasan nisab maupun haul. Silakan masukkan nominal sesuai keikhlasan Anda.
+                    </p>
+                  </div>
+                  <CalcInput icon={HandHeart} label="Nominal Infaq / Sedekah" value={infaqAmount} onChange={(v: number) => setInfaqAmount(v)} />
+                </div>
+              )}
+
+              {activeTab === "fidyah" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                    <p className="text-xs text-orange-700 font-medium leading-relaxed">
+                      <span className="font-black">Fidyah</span> adalah tebusan bagi yang tidak mampu berpuasa Ramadhan karena alasan syar'i (sakit menahun, lansia, hamil/menyusui). Silakan masukkan nominal sesuai ketentuan.
+                    </p>
+                  </div>
+                  <CalcInput icon={Wheat} label="Nominal Fidyah" value={fidyahAmount} onChange={(v: number) => setFidyahAmount(v)} />
+                </div>
+              )}
+
+              {activeTab === "fasangat" && (
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                    <p className="text-xs text-emerald-700 font-medium leading-relaxed">
+                      <span className="font-black">Fasangat (Fastabiqul Khairat Sangu Akhirat)</span> adalah iuran rutin bulanan jamaah untuk tabungan amal akhirat. Silakan masukkan nominal sesuai keikhlasan Anda.
+                    </p>
+                  </div>
+                  
+                  <CalcInput icon={Briefcase} label="Nominal Iuran Fasangat" value={fasangatAmount} onChange={(v: number) => setFasangatAmount(v)} />
+                </div>
+              )}
             </div>
           </div>
 
@@ -355,12 +421,20 @@ function CalculatorContent() {
               <h4 className="text-xs font-black uppercase tracking-widest mb-6 opacity-60">Hasil Perhitungan</h4>
               <div className="space-y-6">
                 <div>
-                  <p className="text-sm font-medium mb-1 opacity-80">Wajib Zakat?</p>
-                  <p className="text-2xl font-black">{isEligible ? "YA, WAJIB" : "BELUM WAJIB"}</p>
+                  <p className="text-sm font-medium mb-1 opacity-80">{activeTab === "infaq" || activeTab === "fidyah" || activeTab === "fasangat" ? "Siap Berdonasi / Bayar?" : "Wajib Zakat?"}</p>
+                  <p className="text-2xl font-black">{activeTab === "infaq" || activeTab === "fidyah" || activeTab === "fasangat" ? (isEligible ? "SIAP" : "MASUKKAN NOMINAL") : (isEligible ? "YA, WAJIB" : "BELUM WAJIB")}</p>
                 </div>
                 <div className="pt-6 border-t border-white/20 flex flex-col gap-3">
-                  <p className="text-sm font-medium mb-1 opacity-80">Nominal Zakat</p>
-                  <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium mb-1 opacity-80">
+                    {activeTab === "infaq" 
+                      ? "Nominal Infaq" 
+                      : activeTab === "fidyah" 
+                        ? "Nominal Fidyah" 
+                        : activeTab === "fasangat" 
+                          ? "Total Iuran Fasangat" 
+                          : "Nominal Zakat"}
+                  </p>
+                  <div className="flex flex-col gap-1.5">
                     <p className="text-5xl font-black tracking-tight">{formatCurrency(zakatDue)}</p>
                   </div>
                 </div>
@@ -375,7 +449,13 @@ function CalculatorContent() {
                       }}
                       className="w-full py-4 bg-white text-emerald-700 rounded-2xl font-black text-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
-                      Tunaikan Zakat Online (QRIS/Transfer)
+                      {activeTab === "infaq" 
+                        ? "Tunaikan Infaq Online (QRIS/Transfer)" 
+                        : activeTab === "fidyah" 
+                          ? "Bayar Fidyah Online (QRIS/Transfer)" 
+                          : activeTab === "fasangat"
+                            ? "Bayar Iuran Fasangat Online (QRIS/Transfer)"
+                            : "Tunaikan Zakat Online (QRIS/Transfer)"}
                       <ArrowRight className="w-5 h-5" />
                     </button>
                   </div>
@@ -475,7 +555,7 @@ function CalculatorContent() {
                                 <div className="bg-white p-4 rounded-xl border border-emerald-100">
                                   <p className="text-sm font-black text-emerald-900">BANK SYARIAH INDONESIA (BSI)</p>
                                   <p className="text-lg font-black text-emerald-600 tracking-widest">7123456789</p>
-                                  <p className="text-xs font-bold text-emerald-400">a.n YAYASAN LINSHAREIN AMAL</p>
+                                  <p className="text-xs font-bold text-emerald-400">a.n MA'HAD FASTABIQUL KHOIROT</p>
                                 </div>
                               </div>
                             )}
@@ -568,6 +648,9 @@ function CalculatorContent() {
                 <p className="text-xs text-emerald-700/80 leading-relaxed italic">
                   {activeTab === "maal" ? "Zakat Maal wajib dikeluarkan jika harta mencapai nisab (85gr emas) dan telah dimiliki selama 1 tahun (haul)." :
                     activeTab === "profesi" ? "Zakat Profesi dikeluarkan dari penghasilan bersih jika mencapai nisab setara 522kg beras." :
+                    activeTab === "infaq" ? "Infaq & Sedekah adalah pemberian sukarela di jalan Allah. Tidak ada batas minimal, semua diterima dengan ridha." :
+                    activeTab === "fidyah" ? "Fidyah wajib bagi yang tidak mampu berpuasa karena uzur syar'i. Memberi makan 1 orang miskin per hari puasa yang ditinggalkan." :
+                    activeTab === "fasangat" ? "Iuran Fasangat dikumpulkan secara kolektif dari para jamaah secara rutin setiap bulan untuk tabungan amal jariyah akhirat." :
                       "Zakat Fitrah wajib bagi setiap muslim yang hidup di akhir Ramadhan."}
                 </p>
               </div>
@@ -609,7 +692,7 @@ function CalculatorContent() {
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-emerald-900 uppercase tracking-tighter">Pembayaran Berhasil</p>
-                      <p className="text-[8px] text-emerald-500">Just now • Linsharein Amal</p>
+                      <p className="text-[8px] text-emerald-500">Just now • Ma'had Fastabiqul Khoirot</p>
                     </div>
                   </div>
                   <p className="text-xs text-emerald-700 leading-tight">

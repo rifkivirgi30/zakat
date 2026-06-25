@@ -49,6 +49,8 @@ export default function MustahikPage() {
     phone: ""
   });
 
+  const [categoryMode, setCategoryMode] = useState<"asnaf" | "lainnya">("asnaf");
+
   const fetchData = async () => {
     setLoading(true);
     const data = await getMustahik();
@@ -79,9 +81,12 @@ export default function MustahikPage() {
   };
 
   const handleEdit = (m: any) => {
+    const cat = m.category || "Fakir";
+    const isAsnaf = asnafCategories.includes(cat);
+    setCategoryMode(isAsnaf ? "asnaf" : "lainnya");
     setFormData({
       name: m.name,
-      category: m.category || "Fakir",
+      category: cat,
       address: m.address || "",
       phone: m.phone || ""
     });
@@ -101,6 +106,7 @@ export default function MustahikPage() {
 
   const resetForm = () => {
     setFormData({ name: "", category: "Fakir", address: "", phone: "" });
+    setCategoryMode("asnaf");
     setIsEdit(false);
     setSelectedId(null);
   };
@@ -229,10 +235,54 @@ export default function MustahikPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs font-bold text-emerald-900 uppercase">Kategori Asnaf</label>
-                <select className="w-full px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 outline-none" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
-                  {asnafCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
+                <label className="text-xs font-bold text-emerald-900 uppercase">Kategori</label>
+                {/* Toggle: Asnaf / Lainnya */}
+                <div className="flex bg-emerald-50 p-1 rounded-xl border border-emerald-100 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryMode("asnaf");
+                      setFormData({ ...formData, category: "Fakir" });
+                    }}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg text-xs font-bold transition-all",
+                      categoryMode === "asnaf"
+                        ? "bg-white text-emerald-800 shadow-sm"
+                        : "text-emerald-500 hover:text-emerald-700"
+                    )}
+                  >
+                    Asnaf
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryMode("lainnya");
+                      setFormData({ ...formData, category: "" });
+                    }}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg text-xs font-bold transition-all",
+                      categoryMode === "lainnya"
+                        ? "bg-white text-emerald-800 shadow-sm"
+                        : "text-emerald-500 hover:text-emerald-700"
+                    )}
+                  >
+                    Lainnya
+                  </button>
+                </div>
+                {categoryMode === "asnaf" ? (
+                  <select className="w-full px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 outline-none text-sm font-medium" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+                    {asnafCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ketik kategori, misal: Yatim Piatu, Janda, Lansia, dll."
+                    className="w-full px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 outline-none text-sm font-medium"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  />
+                )}
               </div>
 
               <div className="space-y-2">

@@ -35,8 +35,9 @@ const amilMenuItems = [
   { icon: ArrowLeftRight, label: "Transaksi", href: "/transactions" },
   { icon: Gift, label: "Penyaluran", href: "/distributions" },
   { icon: ListPlus, label: "Jenis Zakat", href: "/zakat-types" },
+  { icon: Building2, label: "Program Lembaga", href: "/program-lembaga" },
   { icon: FileText, label: "Laporan", href: "/reports" },
-  { icon: Building2, label: "Profil Lembaga", href: "/profile" },
+  { icon: Settings, label: "Profil Lembaga", href: "/profile" },
 ];
 
 const muzakkiMenuItems = [
@@ -82,20 +83,29 @@ function SidebarContent() {
     : amilMenuItems.filter(item => item.href === "/calculator");
 
   return (
-    <aside className="w-64 sidebar-gradient text-white h-screen fixed left-0 top-0 hidden lg:flex flex-col z-50">
+    <aside className="w-64 sidebar-gradient text-white h-screen fixed left-0 top-0 hidden lg:flex flex-col z-50 overflow-hidden">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none !important;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
+        }
+      `}} />
       <div className="p-6">
         <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-white font-bold text-xl italic">L</span>
+            <span className="text-white font-bold text-xl italic">M</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold leading-none">Linsharein</h1>
+            <h1 className="text-lg font-bold leading-none">Ma'had Fastabiqul Khoirot</h1>
             <p className="text-[10px] text-emerald-300 tracking-wider uppercase">Amal Digital</p>
           </div>
         </Link>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-hide">
         {filteredMenuItems.map((item) => {
           // For muzakki items, check tab query param; for amil items, check pathname
           const isMuzakkiItem = 'tab' in item;

@@ -15,6 +15,7 @@ const AMIL_ONLY_PAGES = [
   "/transactions",
   "/distributions",
   "/zakat-types",
+  "/program-lembaga",
   "/reports",
   "/profile",
 ];

@@ -93,6 +93,15 @@ body {
   box-shadow: 0 12px 24px -8px rgba(5, 150, 105, 0.15);
 }
 
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari/Opera */
+}
+
 /* Print Styles */
 @media print {
   /* Hide sidebar, navigation, and action buttons during print */

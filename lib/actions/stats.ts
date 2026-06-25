@@ -149,11 +149,40 @@ function aggregateIntoBuckets(
   return chartData;
 }
 
+function calculatePerformanceChange(current: number, previous: number) {
+  if (previous === 0) {
+    if (current > 0) return { change: "+100%", trend: "up" as const };
+    return { change: "0%", trend: "up" as const };
+  }
+  const percent = ((current - previous) / previous) * 100;
+  const formatted = (percent >= 0 ? "+" : "") + percent.toFixed(1) + "%";
+  return {
+    change: formatted,
+    trend: percent >= 0 ? ("up" as const) : ("down" as const)
+  };
+}
+
+function calculateCumulativeGrowth(added: number, base: number) {
+  if (base === 0) {
+    if (added > 0) return { change: "+100%", trend: "up" as const };
+    return { change: "0%", trend: "up" as const };
+  }
+  const percent = (added / base) * 100;
+  const formatted = (percent >= 0 ? "+" : "") + percent.toFixed(1) + "%";
+  return {
+    change: formatted,
+    trend: percent >= 0 ? ("up" as const) : ("down" as const)
+  };
+}
+
 export async function getDashboardStats(period: string = "6m") {
   try {
     await requireAmil();
 
     const { startDate, buckets } = buildChartTimeline(period);
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
     const [
       totalZakatResult,
@@ -162,7 +191,15 @@ export async function getDashboardStats(period: string = "6m") {
       uniqueMuzakki,
       recentTransactions,
       recentDistributions,
-      typeDistribution
+      typeDistribution,
+      zakatCurrent,
+      zakatPrevious,
+      muzakkiCurrentCount,
+      muzakkiPreviousCount,
+      distributionCurrent,
+      distributionPrevious,
+      txCurrentCount,
+      txPreviousCount
     ] = await Promise.all([
       prisma.transaction.aggregate({
         where: { status: "Success" },
@@ -192,6 +229,34 @@ export async function getDashboardStats(period: string = "6m") {
         by: ['type'],
         where: { status: "Success" },
         _count: { id: true }
+      }),
+      prisma.transaction.aggregate({
+        where: { status: "Success", date: { gte: thirtyDaysAgo } },
+        _sum: { amount: true }
+      }),
+      prisma.transaction.aggregate({
+        where: { status: "Success", date: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+        _sum: { amount: true }
+      }),
+      prisma.muzakki.count({
+        where: { createdAt: { gte: thirtyDaysAgo } }
+      }),
+      prisma.muzakki.count({
+        where: { createdAt: { lt: thirtyDaysAgo } }
+      }),
+      prisma.distribution.aggregate({
+        where: { date: { gte: thirtyDaysAgo } },
+        _sum: { amount: true }
+      }),
+      prisma.distribution.aggregate({
+        where: { date: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+        _sum: { amount: true }
+      }),
+      prisma.transaction.count({
+        where: { status: "Success", date: { gte: thirtyDaysAgo } }
+      }),
+      prisma.transaction.count({
+        where: { status: "Success", date: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }
       })
     ]);
 
@@ -206,13 +271,21 @@ export async function getDashboardStats(period: string = "6m") {
       value: totalForTypes > 0 ? Math.round((item._count.id / totalForTypes) * 100) : 0
     })).sort((a: any, b: any) => b.value - a.value);
 
+    const growth = {
+      zakat: calculatePerformanceChange(zakatCurrent._sum.amount || 0, zakatPrevious._sum.amount || 0),
+      muzakki: calculateCumulativeGrowth(muzakkiCurrentCount, muzakkiPreviousCount),
+      distribution: calculatePerformanceChange(distributionCurrent._sum.amount || 0, distributionPrevious._sum.amount || 0),
+      transactions: calculatePerformanceChange(txCurrentCount, txPreviousCount)
+    };
+
     return {
       totalZakat,
       totalTransactions,
       uniqueMuzakki,
       totalDistribution,
       chartData,
-      zakatTypes
+      zakatTypes,
+      growth
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -222,7 +295,13 @@ export async function getDashboardStats(period: string = "6m") {
       uniqueMuzakki: 0,
       totalDistribution: 0,
       chartData: [],
-      zakatTypes: []
+      zakatTypes: [],
+      growth: {
+        zakat: { change: "0%", trend: "up" as const },
+        muzakki: { change: "0%", trend: "up" as const },
+        distribution: { change: "0%", trend: "up" as const },
+        transactions: { change: "0%", trend: "up" as const }
+      }
     };
   }
 }
@@ -306,7 +385,6 @@ export async function getReportData() {
       prisma.transaction.findMany({
         where: { status: "Success" },
         orderBy: { date: 'desc' },
-        take: 10,
         select: {
           id: true,
           txId: true,
@@ -320,7 +398,6 @@ export async function getReportData() {
       }),
       prisma.distribution.findMany({
         orderBy: { date: 'desc' },
-        take: 10,
         select: {
           id: true,
           mustahikName: true,

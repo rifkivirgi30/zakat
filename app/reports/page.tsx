@@ -68,6 +68,25 @@ export default function ReportsPage() {
     );
   }
 
+  // Group transactions by type (for print report)
+  const groupedTransactions = (reportData.recentTransactions || []).reduce((acc: any, tx: any) => {
+    const key = tx.type || "Lainnya";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(tx);
+    return acc;
+  }, {});
+
+  // Group distributions by category/asnaf (for print report)
+  const groupedDistributions = (reportData.recentDistributions || []).reduce((acc: any, dist: any) => {
+    const key = dist.category || "Lainnya";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(dist);
+    return acc;
+  }, {});
+
+  const displayTransactions = (reportData.recentTransactions || []).slice(0, 10);
+  const displayDistributions = (reportData.recentDistributions || []).slice(0, 10);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -75,7 +94,7 @@ export default function ReportsPage() {
         <div className="hidden print:block mb-8 border-b-2 border-emerald-900 pb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-black text-emerald-900">LINSHAREIN AMAL</h1>
+              <h1 className="text-3xl font-black text-emerald-900">MA'HAD FASTABIQUL KHOIROT</h1>
               <p className="text-emerald-600 font-bold">Laporan Rekapitulasi Zakat & Infaq</p>
               <p className="text-xs text-emerald-500 mt-1">Dicetak pada: {new Date().toLocaleString('id-ID')}</p>
             </div>
@@ -103,7 +122,7 @@ export default function ReportsPage() {
             <button 
               onClick={() => {
                 const csvRows = [
-                  ["LAPORAN KEUANGAN LINSHAREIN AMAL"],
+                  ["LAPORAN KEUANGAN MA'HAD FASTABIQUL KHOIROT"],
                   [`Tanggal Export: ${new Date().toLocaleDateString()}`],
                   [""],
                   ["RINGKASAN KEUANGAN"],
@@ -133,7 +152,7 @@ export default function ReportsPage() {
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `Laporan_Resmi_Linsharein_${new Date().getTime()}.csv`);
+                link.setAttribute("download", `Laporan_Resmi_Mahad_Fastabiqul_Khoirot_${new Date().getTime()}.csv`);
                 document.body.appendChild(link);
                 link.click();
               }}
@@ -244,13 +263,13 @@ export default function ReportsPage() {
         </div>
 
         {/* Detailed Data List based on Tab */}
-        <div className="bg-white rounded-3xl border border-emerald-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-3xl border border-emerald-100 shadow-sm overflow-hidden print:hidden">
           <div className="p-6 border-b border-emerald-50 flex items-center justify-between bg-emerald-50/20">
             <h3 className="text-lg font-bold text-emerald-900">
               {activeTab === "pemasukan" ? "Rincian Transaksi Masuk" : "Rincian Penyaluran Dana"}
             </h3>
             <div className="text-xs font-bold text-emerald-500 bg-white px-3 py-1.5 rounded-lg border border-emerald-100">
-              {activeTab === "pemasukan" ? `${reportData.recentTransactions.length} Transaksi Terakhir` : `${reportData.recentDistributions.length} Penyaluran Terakhir`}
+              {activeTab === "pemasukan" ? `${displayTransactions.length} Transaksi Terakhir` : `${displayDistributions.length} Penyaluran Terakhir`}
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -278,7 +297,7 @@ export default function ReportsPage() {
               </thead>
               <tbody className="divide-y divide-emerald-50">
                 {activeTab === "pemasukan" ? (
-                  reportData.recentTransactions.map((tx: any, i: number) => (
+                  displayTransactions.map((tx: any, i: number) => (
                     <tr key={i} className="hover:bg-emerald-50/20 transition-colors">
                       <td className="px-8 py-4">
                         <p className="text-sm font-bold text-emerald-900">{tx.muzakkiName}</p>
@@ -295,7 +314,7 @@ export default function ReportsPage() {
                     </tr>
                   ))
                 ) : (
-                  reportData.recentDistributions.map((dist: any, i: number) => (
+                  displayDistributions.map((dist: any, i: number) => (
                     <tr key={i} className="hover:bg-emerald-50/20 transition-colors">
                       <td className="px-8 py-4">
                         <p className="text-sm font-bold text-emerald-900">{dist.mustahikName}</p>
@@ -327,6 +346,101 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        {/* Print-Only Detailed Data Grouped by Category */}
+        <div className="hidden print:block space-y-8">
+          {activeTab === "pemasukan" ? (
+            Object.keys(groupedTransactions).length === 0 ? (
+              <p className="text-sm text-emerald-600 font-medium">Tidak ada data transaksi masuk.</p>
+            ) : (
+              Object.keys(groupedTransactions).map((type) => (
+                <div key={type} className="bg-white rounded-3xl border border-emerald-100 p-8 space-y-4 break-inside-avoid shadow-sm">
+                  <div className="border-b border-emerald-100 pb-4 flex justify-between items-center bg-emerald-50/20 -mx-8 -mt-8 p-6 rounded-t-3xl mb-2">
+                    <h3 className="text-base font-black text-emerald-900 uppercase">
+                      Laporan Penghimpunan: {type}
+                    </h3>
+                    <div className="text-right">
+                      <p className="text-xs text-emerald-600 font-bold">
+                        Total: {formatCurrency(groupedTransactions[type].reduce((sum: number, tx: any) => sum + tx.amount, 0))}
+                      </p>
+                      <p className="text-[10px] text-emerald-400 font-medium">
+                        {groupedTransactions[type].length} Transaksi
+                      </p>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-emerald-800 text-[10px] uppercase tracking-wider font-black border-b border-emerald-50">
+                          <th className="py-3 pr-4">Muzakki</th>
+                          <th className="py-3 px-4">ID Transaksi</th>
+                          <th className="py-3 px-4">Tanggal</th>
+                          <th className="py-3 px-4 text-right">Nominal</th>
+                          <th className="py-3 pl-4 text-center">Metode</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-emerald-50">
+                        {groupedTransactions[type].map((tx: any, idx: number) => (
+                          <tr key={idx}>
+                            <td className="py-3 pr-4 font-bold text-emerald-900">{tx.muzakkiName}</td>
+                            <td className="py-3 px-4 text-[10px] text-emerald-500 font-mono">{tx.txId}</td>
+                            <td className="py-3 px-4 text-emerald-600">{new Date(tx.date).toLocaleDateString('id-ID')}</td>
+                            <td className="py-3 px-4 text-right font-black text-emerald-700">{formatCurrency(tx.amount)}</td>
+                            <td className="py-3 pl-4 text-center text-emerald-500 uppercase font-bold">{tx.method}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))
+            )
+          ) : (
+            Object.keys(groupedDistributions).length === 0 ? (
+              <p className="text-sm text-emerald-600 font-medium">Tidak ada data penyaluran dana.</p>
+            ) : (
+              Object.keys(groupedDistributions).map((category) => (
+                <div key={category} className="bg-white rounded-3xl border border-emerald-100 p-8 space-y-4 break-inside-avoid shadow-sm">
+                  <div className="border-b border-emerald-100 pb-4 flex justify-between items-center bg-emerald-50/20 -mx-8 -mt-8 p-6 rounded-t-3xl mb-2">
+                    <h3 className="text-base font-black text-emerald-900 uppercase">
+                      Laporan Penyaluran Asnaf: {category}
+                    </h3>
+                    <div className="text-right">
+                      <p className="text-xs text-rose-600 font-bold">
+                        Total Penyaluran: {formatCurrency(groupedDistributions[category].reduce((sum: number, dist: any) => sum + dist.amount, 0))}
+                      </p>
+                      <p className="text-[10px] text-emerald-400 font-medium">
+                        {groupedDistributions[category].length} Distribusi
+                      </p>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-emerald-800 text-[10px] uppercase tracking-wider font-black border-b border-emerald-50">
+                          <th className="py-3 pr-4">Penerima (Mustahik)</th>
+                          <th className="py-3 px-4">Keterangan</th>
+                          <th className="py-3 px-4">Tanggal</th>
+                          <th className="py-3 pl-4 text-right">Nominal</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-emerald-50">
+                        {groupedDistributions[category].map((dist: any, idx: number) => (
+                          <tr key={idx}>
+                            <td className="py-3 pr-4 font-bold text-emerald-900">{dist.mustahikName}</td>
+                            <td className="py-3 px-4 text-[10px] text-emerald-500 max-w-[200px] truncate">{dist.description || "-"}</td>
+                            <td className="py-3 px-4 text-emerald-600">{new Date(dist.date).toLocaleDateString('id-ID')}</td>
+                            <td className="py-3 pl-4 text-right font-black text-rose-600">{formatCurrency(dist.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))
+            )
+          )}
+        </div>
+
         {/* Image Preview Modal */}
         <AnimatePresence>
           {previewImage && (
@@ -352,7 +466,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="p-6 text-center bg-emerald-50/30">
                   <p className="text-emerald-900 font-bold">Bukti Dokumentasi Penyaluran</p>
-                  <p className="text-xs text-emerald-600 mt-1">Dokumen ini disimpan secara aman di sistem Linsharein Amal</p>
+                  <p className="text-xs text-emerald-600 mt-1">Dokumen ini disimpan secara aman di sistem Ma'had Fastabiqul Khoirot</p>
                 </div>
               </motion.div>
             </div>
